@@ -24,8 +24,8 @@ resource "aws_lambda_function" "my_lambda" {
 
   # Use the correct Layer ARNs with version 1 for Tesseract and Python libraries (pytesseract, Pillow)
   layers = [
-    "arn:aws:lambda:us-east-1:786520870242:layer:tesseract-layer:1",   # Tesseract layer
-    "arn:aws:lambda:us-east-1:786520870242:layer:python-libraries:1"   # Python libraries layer (pytesseract and Pillow)
+    "arn:aws:lambda:us-east-1:786520870242:layer:tesseract-layer:1", # Tesseract layer
+    "arn:aws:lambda:us-east-1:786520870242:layer:python-libraries:1" # Python libraries layer (pytesseract and Pillow)
   ]
 
   filename         = data.archive_file.lambda_zip.output_path
