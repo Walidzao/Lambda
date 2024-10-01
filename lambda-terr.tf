@@ -10,6 +10,12 @@ data "archive_file" "lambda_zip" {
   output_path = "/tmp/lambda.zip" #check the output path 
 }
 
+# Archive the Proxy Lambda function
+data "archive_file" "proxy_lambda_zip" {
+  type        = "zip"
+  source_file = "./lambda-proxy-function.py" # Path to your Proxy Lambda function
+  output_path = "/tmp/proxy_lambda.zip"
+}
 
 # Attach the necessary AWS managed policies to the IAM role (CloudWatch Logs, AWS Textract)
 resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
@@ -17,6 +23,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Main OCR Lambda function
 resource "aws_lambda_function" "my_lambda" {
   function_name = "MyLambdaFunction"
   handler       = "lambda_function.lambda_handler"
@@ -33,6 +40,31 @@ resource "aws_lambda_function" "my_lambda" {
 
   role = aws_iam_role.lambda_exec.arn
 }
+
+# Create the Proxy Lambda Function that triggers the OCR Lambda
+resource "aws_lambda_function" "proxy_lambda" {
+  function_name = "ProxyLambdaFunction"
+  handler       = "lambda-proxy-function.lambda_handler"
+  runtime       = "python3.8"
+
+  filename         = data.archive_file.proxy_lambda_zip.output_path
+  source_code_hash = data.archive_file.proxy_lambda_zip.output_base64sha256
+  role             = aws_iam_role.lambda_exec.arn
+}
+
+# Attach permissions for the Proxy Lambda to invoke the OCR Lambda
+# Attach permissions for the Proxy Lambda to invoke the OCR Lambda
+resource "aws_lambda_permission" "invoke_permission" {
+  statement_id  = "AllowInvocationOfOCRLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.my_lambda.function_name
+  principal     = "lambda.amazonaws.com"
+
+  # Grant permission specifically to the Proxy Lambda
+  source_arn = aws_lambda_function.proxy_lambda.arn
+}
+
+
 
 # Output the function ARN and invoke URL (if used with API Gateway)
 output "lambda_function_arn" {
