@@ -22,7 +22,7 @@ def lambda_handler(event, context):
     try:
         # Invoke the first Lambda function
         response = lambda_client.invoke(
-            FunctionName='lambda-function',  # Replace with the name of the first Lambda function
+            FunctionName='MyLambdaFunction',  # Replace with the name of the first Lambda function
             InvocationType='RequestResponse',       # This waits for a response
             Payload=json.dumps(payload)
         )
