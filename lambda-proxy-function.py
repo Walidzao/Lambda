@@ -6,12 +6,21 @@ lambda_client = boto3.client('lambda')
 
 def lambda_handler(event, context):
     # Extract the base64 image data from the event
-    base64_image_data = event.get('image_data')
-    
+    if event.get("body"):
+        try:
+            # Parse the JSON in the body to extract image data
+            body = json.loads(event["body"])
+            base64_image_data = body.get("image_data")
+        except json.JSONDecodeError:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({"error": "Invalid JSON format in body"})
+            }
+
     if not base64_image_data:
         return {
             'statusCode': 400,
-            'body': json.dumps('No image data found in the request')
+            'body': json.dumps(event["body"])
         }
 
     # Prepare the payload to send to the first Lambda function
